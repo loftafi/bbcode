@@ -1,6 +1,6 @@
 .{
     .name = .bbcode,
-    .version = "0.1.1",
+    .version = "0.1.2",
     .fingerprint = 0x415dc45b84cc755b,
     .minimum_zig_version = "0.15.2",
     .dependencies = .{},

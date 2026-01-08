@@ -4,7 +4,7 @@ pub const Token = struct {
     /// `text` or `whitespace`, `eof` or a bbcode tag, i.e. `italic`
     type: Type = .undefined,
 
-    /// text content, whitespace content, or the bbcode tag value, i.e. `[table=3] has a value of `3`
+    /// text, whitespace, or paragraph content; or a bbcode tag value, i.e. `[table=3] has a value of `3`
     value: []const u8 = "",
 
     /// `open` when starting bbcode, i.e. `[b]` or 'close` when ending bbcode, i.e. `[/b]`
@@ -15,7 +15,14 @@ pub const Token = struct {
 
     pub const Type = enum {
         undefined,
+
+        /// Any sequence of whitespace characters that contains
+        /// less than one linebreak.
         whitespace,
+
+        /// Any sequence of whitespace charcters that contains
+        /// more than one linebreak.
+        paragraph,
         text,
         eof,
         br,
@@ -34,6 +41,7 @@ pub const Token = struct {
         bbvideo,
         quote,
         code,
+        pre,
         list,
         ul,
         ol,
@@ -51,6 +59,7 @@ pub const Token = struct {
         right,
         centre,
         spoiler,
+        youtube,
 
         /// Maps a bbcode tag string to the corresponding enum value.
         pub fn parse(value: []const u8) @This() {
@@ -60,9 +69,10 @@ pub const Token = struct {
             if (std.ascii.eqlIgnoreCase(value, "s")) return .strikethrough;
             if (std.ascii.eqlIgnoreCase(value, "sup")) return .superscript;
             if (std.ascii.eqlIgnoreCase(value, "sub")) return .subscript;
+            if (std.ascii.eqlIgnoreCase(value, "pre")) return .pre;
             if (std.ascii.eqlIgnoreCase(value, "size")) return .size;
             if (std.ascii.eqlIgnoreCase(value, "colour")) return .colour;
-            if (std.ascii.eqlIgnoreCase(value, "color")) return .color;
+            if (std.ascii.eqlIgnoreCase(value, "color")) return .colour;
             if (std.ascii.eqlIgnoreCase(value, "spoiler")) return .spoiler;
             if (std.ascii.eqlIgnoreCase(value, "blur")) return .blur;
             if (std.ascii.eqlIgnoreCase(value, "size")) return .size;
@@ -93,7 +103,6 @@ pub const Token = struct {
             if (std.ascii.eqlIgnoreCase(value, "right")) return .right;
             if (std.ascii.eqlIgnoreCase(value, "centre")) return .centre;
             if (std.ascii.eqlIgnoreCase(value, "center")) return .centre;
-            if (std.ascii.eqlIgnoreCase(value, "pre")) return .pre;
             if (std.ascii.eqlIgnoreCase(value, "youtube")) return .youtube;
             return .undefined;
         }
@@ -122,14 +131,21 @@ pub const Token = struct {
         // Read a whitespace token if we see whitespace
         if (is_whitespace(self.data[0])) {
             var i: usize = 1;
+            var cr_count: usize = 0;
+            var lf_count: usize = 0;
+            if (self.data[0] == '\r') cr_count += 1;
+            if (self.data[0] == '\n') lf_count += 1;
             while (i < self.data.len) {
-                if (!is_whitespace(self.data[i])) break;
+                const c = self.data[i];
+                if (!is_whitespace(c)) break;
+                if (c == '\r') cr_count += 1;
+                if (c == '\n') lf_count += 1;
                 i += 1;
             }
             return .{
                 .data = self.data[i..],
                 .value = self.data[0..i],
-                .type = .whitespace,
+                .type = if (cr_count > 1 or lf_count > 1) .paragraph else .whitespace,
             };
         }
 
@@ -269,6 +285,28 @@ test "read bbcode" {
 
     token = token.next();
     try expectEqual(.eof, token.type);
+}
+
+test "bbcode paragraph break" {
+    {
+        var token = Token.init("abc\n\ndef \r\nhij");
+        try expectEqual(.text, token.type);
+        try expectEqualStrings("abc", token.value);
+        token = token.next();
+        try expectEqual(.paragraph, token.type);
+        try expectEqualStrings("\n\n", token.value);
+        token = token.next();
+        try expectEqual(.text, token.type);
+        try expectEqualStrings("def", token.value);
+        token = token.next();
+        try expectEqual(.whitespace, token.type);
+        try expectEqualStrings(" \r\n", token.value);
+        token = token.next();
+        try expectEqual(.text, token.type);
+        try expectEqualStrings("hij", token.value);
+        token = token.next();
+        try expectEqual(.eof, token.type);
+    }
 }
 
 test "fail bbcode" {
