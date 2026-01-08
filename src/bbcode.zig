@@ -26,7 +26,7 @@ pub const Token = struct {
         superscript,
         subscript,
         size,
-        color,
+        colour,
         blur,
         url,
         email,
@@ -35,6 +35,8 @@ pub const Token = struct {
         quote,
         code,
         list,
+        ul,
+        ol,
         li,
         line,
         @"align",
@@ -45,6 +47,10 @@ pub const Token = struct {
         row,
         cell,
         rate,
+        left,
+        right,
+        centre,
+        spoiler,
 
         /// Maps a bbcode tag string to the corresponding enum value.
         pub fn parse(value: []const u8) @This() {
@@ -55,7 +61,9 @@ pub const Token = struct {
             if (std.ascii.eqlIgnoreCase(value, "sup")) return .superscript;
             if (std.ascii.eqlIgnoreCase(value, "sub")) return .subscript;
             if (std.ascii.eqlIgnoreCase(value, "size")) return .size;
+            if (std.ascii.eqlIgnoreCase(value, "colour")) return .colour;
             if (std.ascii.eqlIgnoreCase(value, "color")) return .color;
+            if (std.ascii.eqlIgnoreCase(value, "spoiler")) return .spoiler;
             if (std.ascii.eqlIgnoreCase(value, "blur")) return .blur;
             if (std.ascii.eqlIgnoreCase(value, "size")) return .size;
             if (std.ascii.eqlIgnoreCase(value, "url")) return .url;
@@ -66,6 +74,8 @@ pub const Token = struct {
             if (std.ascii.eqlIgnoreCase(value, "quote")) return .quote;
             if (std.ascii.eqlIgnoreCase(value, "code")) return .code;
             if (std.ascii.eqlIgnoreCase(value, "list")) return .list;
+            if (std.ascii.eqlIgnoreCase(value, "ul")) return .list;
+            if (std.ascii.eqlIgnoreCase(value, "ol")) return .list;
             if (std.ascii.eqlIgnoreCase(value, "*")) return .li;
             if (std.ascii.eqlIgnoreCase(value, "line")) return .line;
             if (std.ascii.eqlIgnoreCase(value, "br")) return .br;
@@ -75,8 +85,16 @@ pub const Token = struct {
             if (std.ascii.eqlIgnoreCase(value, "pipes")) return .pipes;
             if (std.ascii.eqlIgnoreCase(value, "table")) return .table;
             if (std.ascii.eqlIgnoreCase(value, "row")) return .row;
+            if (std.ascii.eqlIgnoreCase(value, "tr")) return .row;
             if (std.ascii.eqlIgnoreCase(value, "cell")) return .cell;
+            if (std.ascii.eqlIgnoreCase(value, "td")) return .cell;
             if (std.ascii.eqlIgnoreCase(value, "rate")) return .rate;
+            if (std.ascii.eqlIgnoreCase(value, "left")) return .left;
+            if (std.ascii.eqlIgnoreCase(value, "right")) return .right;
+            if (std.ascii.eqlIgnoreCase(value, "centre")) return .centre;
+            if (std.ascii.eqlIgnoreCase(value, "center")) return .centre;
+            if (std.ascii.eqlIgnoreCase(value, "pre")) return .pre;
+            if (std.ascii.eqlIgnoreCase(value, "youtube")) return .youtube;
             return .undefined;
         }
     };
