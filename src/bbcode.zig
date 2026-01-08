@@ -99,8 +99,6 @@ pub const Token = struct {
         if (self.data.len == 0) return .{
             .data = self.data,
             .type = .eof,
-            .value = "",
-            .state = .undefined,
         };
 
         // Read a whitespace token if we see whitespace
@@ -114,7 +112,6 @@ pub const Token = struct {
                 .data = self.data[i..],
                 .value = self.data[0..i],
                 .type = .whitespace,
-                .state = .undefined,
             };
         }
 
@@ -167,7 +164,6 @@ pub const Token = struct {
             }
             return .{
                 .data = self.data[i..],
-                //.value = self.data[0..i],
                 .value = self.data[value_start..value_end],
                 .type = Type.parse(self.data[field_start..field_end]),
                 .state = state,
@@ -186,7 +182,6 @@ pub const Token = struct {
             .data = self.data[i..],
             .value = self.data[0..i],
             .type = .text,
-            .state = .undefined,
         };
     }
 };
