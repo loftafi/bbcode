@@ -1,7 +1,3 @@
-This project is licensed under the MIT License (see below). External SDL
-libraries are included in the `libs` folder for convinence. See the `libs`
-folder for the SDL licences.
-
 # MIT License
 
 Copyright (c) 2025-2026. Jay Rhoden.
