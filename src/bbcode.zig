@@ -1,14 +1,23 @@
+/// Initialise a `Token` with your full bbcode data string, and it will return
+/// the first token inside the string.  Use `token.next()` to read more tokens.
 pub const Token = struct {
+    /// `text` or `whitespace`, `eof` or a bbcode tag, i.e. `italic`
     type: Type = .undefined,
+
+    /// text content, whitespace content, or the bbcode tag value, i.e. `[table=3] has a value of `3`
     value: []const u8 = "",
+
+    /// `open` when starting bbcode, i.e. `[b]` or 'close` when ending bbcode, i.e. `[/b]`
     state: TagState = .undefined,
 
+    /// Contains the remaining data that appears after the current token.
     data: []const u8 = "",
 
     pub const Type = enum {
         undefined,
         whitespace,
         text,
+        eof,
         br,
         bold,
         italic,
@@ -36,8 +45,8 @@ pub const Token = struct {
         row,
         cell,
         rate,
-        eof,
 
+        /// Maps a bbcode tag string to the corresponding enum value.
         pub fn parse(value: []const u8) @This() {
             if (std.ascii.eqlIgnoreCase(value, "b")) return .bold;
             if (std.ascii.eqlIgnoreCase(value, "i")) return .italic;
@@ -72,17 +81,20 @@ pub const Token = struct {
         }
     };
 
+    /// If a token contains a bbcode tag, it is an `open` or `close` tag.
     pub const TagState = enum {
         undefined,
         open,
         close,
     };
 
+    /// Return the first token that appears inside a data string.
     pub fn init(data: []const u8) Token {
         const t = Token{ .data = data };
         return t.next();
     }
 
+    /// Return the next token that appears after this token.
     pub fn next(self: *const Token) Token {
         if (self.data.len == 0) return .{
             .data = self.data,
@@ -91,6 +103,7 @@ pub const Token = struct {
             .state = .undefined,
         };
 
+        // Read a whitespace token if we see whitespace
         if (is_whitespace(self.data[0])) {
             var i: usize = 1;
             while (i < self.data.len) {
@@ -105,6 +118,7 @@ pub const Token = struct {
             };
         }
 
+        // Read a bbcode token if we see the token start character
         if (self.data[0] == '[') {
             var i: usize = 1;
             var field_start: usize = 1;
@@ -151,7 +165,6 @@ pub const Token = struct {
                     }
                 }
             }
-            //err("full {s} => {s}", .{ self.data[0..i], self.data[field_start..field_end] });
             return .{
                 .data = self.data[i..],
                 //.value = self.data[0..i],
@@ -161,6 +174,7 @@ pub const Token = struct {
             };
         }
 
+        // Read pure text until the next whitespace or bbcode token appears.
         var i: usize = 0;
         while (i < self.data.len) {
             const c = self.data[i];
@@ -278,6 +292,5 @@ test "fail bbcode" {
 }
 
 const std = @import("std");
-const err = std.log.err;
 const expectEqual = std.testing.expectEqual;
 const expectEqualStrings = std.testing.expectEqualStrings;
